@@ -6,64 +6,114 @@
 #include<time.h>
 using namespace std;
 
-const int maxn = 1e5;//length of expression
+
 class QuestionBank{
 	protected:
-		/***
-		var
-		***/
-		int questions = 10;//nums of questions
-		int remain = 10;
-		int len = 3;
-		bool negative = false;
-		bool decimal = false;
-		bool bracket = true;
-		string infix_expression;
-		int suffix_expression[maxn];
-		/***
-		method
-		***/
-		int icp(char a);//in-stack priority
+		/**
+		 * var
+		 **/
+		static const int maxn = 1e5;//length of expression
+		static const int questions = 10; // nums of questions
+		int remain,len;
+		bool negative,decimal,bracket;
+		/**
+		 * method
+		 **/
+		int icp(char a); // in-stack priority
 		int isp(char a);
-		void change();//infix expression to suffix expression
-		int calculate();//calculate suffix expression
-		string generate(unsigned int seed,int flag = 0); 
+		void change(string,int[]); // infix expression to suffix expression
 	public:
 		QuestionBank();
 		~QuestionBank();
-		/*
-		void set_remain();
-		void set_len();
-		void set_negative();
-		void set_decimal();
-		void set bracket();*/
-		void get_questions();
-		
-		
+		/**
+		 * set attr
+		 **/
+		void set_remain(int);
+		void set_len(int);
+		void set_negative(bool);
+		void set_decimal(bool);
+		void set_bracket(bool);
+		/**
+		 * main public method
+		 **/
+		string generate(unsigned int seed = rand(),int flag = 0); 
+		int calculate(string); // calculate suffix expression	
 }; 
-int main(){
+
+extern "C"{
+	/**
+	 * c api for py
+	 **/
 	QuestionBank a;
-	a.get_questions();
+
+	char* py_test(char *s){
+		return s;
+	}
+
+	void py_set_remain(int x){
+		a.set_remain(x);
+	}
+
+	void py_set_len(int x){
+		a.set_len(x);
+	}
+
+	void py_set_negative(int x){
+		if(x)a.set_negative(true);
+		else a.set_negative(false);
+	}
+
+	void py_set_decimal(int x){
+		if(x)a.set_decimal(true);
+		else a.set_decimal(false);
+	}
+
+	void py_set_bracket(int x){
+		if(x)a.set_bracket(true);
+		else a.set_bracket(false);
+	}
+
+	const char* py_generate(){
+		string s = a.generate();
+		char *p = new char[20];
+		for(int i=0;i<s.length();i++)p[i] = s[i];
+		p[s.length()] = '\x00';
+		return p;
+    }
+
+	int py_calculate(char *s){
+		return a.calculate(s);
+	}
 }
 
-QuestionBank::QuestionBank(){
-	infix_expression.clear();
-	memset(suffix_expression,0,sizeof(suffix_expression));
+void test(){
+	/**
+	 * debug mode!!
+	 **/
+	QuestionBank b;
+	string s = b.generate();
+	cout<<s<<endl;
+	cout<<b.calculate("1*0*8")<<endl;
+	cout<<s<<endl;
 }
+
+int main(){
+	cout<<"**********************"<<endl;
+	cout<<"**Designed By HeFeng**"<<endl;
+	cout<<"**********************"<<endl;
+	test();
+	system("pause");
+	return 0;
+}
+
+QuestionBank::QuestionBank():remain(2),len(10),negative(false),decimal(false),bracket(false){
+	// constructor
+}
+
 QuestionBank::~QuestionBank(){
-	int a;
+	// destructor
 }
 
-void QuestionBank::get_questions(){
-	int tmp = remain;
-	infix_expression = generate(time(0));
-	infix_expression.append(1,'#');
-	remain = tmp;
-	cout<<infix_expression<<endl;
-	change();
-	cout<<"?"<<endl;
-	cout<<calculate();
-}
 int QuestionBank::icp(char a){
 	switch(a){
 		case '#':return 0;
@@ -74,8 +124,10 @@ int QuestionBank::icp(char a){
 		case '+':return 4;
 		case '-':return 2;
 		case ')':return 1;
+		default:return -1;
 	}
 }
+
 int QuestionBank::isp(char a){
 	switch(a){
 		case '#':return 0;
@@ -86,9 +138,11 @@ int QuestionBank::isp(char a){
 		case '+':return 5;
 		case '-':return 3;
 		case ')':return 12;
+		default:return -1;
 	}
 }
-void QuestionBank::change(){
+
+void QuestionBank::change(string infix_expression,int suffix_expression[]){
 	int i=0,j=0;
 	int ch;
 	char temp;
@@ -105,49 +159,42 @@ void QuestionBank::change(){
 			i--;
 			suffix_expression[j++] = tnum;
 		}
-		else if(ch==')')//遇到右括号弹出栈内元素直到遇到 ( 
+		else if(ch==')')
 			for(temp=s.top(),s.pop();temp!='(';temp=s.top(),s.pop())
 				suffix_expression[j++] = temp;
-		else{//从栈中取出所有比当前操作符优先级高的 
+		else{
 			for(temp=s.top(),s.pop();icp(ch)<=isp(temp);temp=s.top(),s.pop())
 				suffix_expression[j++] = temp;
 			s.push(temp);
 			s.push((char)ch);
 		}
 	}
-	while(!s.empty()){//将剩余部分弹出 
+	while(!s.empty()){
 		suffix_expression[j++] = s.top();
 		s.pop();	
 	}
 }
-int QuestionBank::calculate(){
-	stack<int>s;
-	int j=0;
-	while(true){
-		int ch=suffix_expression[j++];
-		if(ch=='#'||ch==0)break;
-		if(ch!='+' && ch!='-' && ch!='*' && ch!='/')//中缀表达式中的变元值入栈 
-			s.push(ch);
-		else{//遇到操作符进行计算 
-			int t1,t2;//左右操作数 
-			t1 = s.top();
-			s.pop();
-			t2 = s.top();
-			s.pop();
-			switch(ch){
-				case '*':s.push(t2*t1);//合取运算 
-						break;
-				case '/':s.push(t2/t1);//析取运算 
-						break;
-				case '+':s.push(t2+t1);
-						break;
-				case '-':s.push(t2-t1);
-						break;
-			}
-		}
-	}
-	return s.top();
+
+void QuestionBank::set_remain(int x){
+	remain = x;
 }
+
+void QuestionBank::set_len(int x){
+	len = x;
+}
+
+void QuestionBank::set_negative(bool x){
+	negative = x;
+}
+
+void QuestionBank::set_decimal(bool x){
+	decimal = x;
+}
+
+void QuestionBank::set_bracket(bool x){
+	bracket = x;
+}
+
 string QuestionBank::generate(unsigned int seed,int flag){
 	string res;
 	res.clear();
@@ -155,15 +202,11 @@ string QuestionBank::generate(unsigned int seed,int flag){
 	remain--;
 	if(flag && bracket)res += '(';
 	if(remain<=1){
-		string tmp;
-		tmp.clear();
-		for(int i = len;i;i--){
-			char p = rand()%10+'0';
-			tmp.append(1,p);
-		}
+		char tmp[10];
+		itoa(rand()%len,tmp,10);
 		res += tmp;
 	}else{
-		res += generate(seed*seed,rand()%2);
+		res += generate(seed*seed+time(0),rand()%2);
 	}
 	switch(rand()%4){
 		case 0:res += '+';
@@ -175,16 +218,44 @@ string QuestionBank::generate(unsigned int seed,int flag){
 		case 3:res += '/';
 	}
 	if(remain<=1){
-		string tmp;
-		tmp.clear();
-		for(int i = len;i;i--){
-			char p = rand()%10+'0';
-			tmp.append(1,p);
-		}
+		char tmp[10];
+		itoa(rand()%len,tmp,10);
 		res += tmp;
 	}else{
-		res += generate(seed*seed*seed,rand()%2);
+		res += generate(seed*seed*seed+time(0),rand()%2);
 	}
 	if(flag && bracket)res += ')';
 	return res;
+}
+
+int QuestionBank::calculate(string infix_expression){
+	int suffix_expression[maxn];
+	infix_expression.append(1,'#');
+	change(infix_expression,suffix_expression);
+	stack<int>s;
+	int j=0;
+	while(true){
+		int ch=suffix_expression[j++];
+		if(ch=='#')break;
+		if(ch!='+' && ch!='-' && ch!='*' && ch!='/')
+			s.push(ch);
+		else{
+			int t1,t2;
+			t1 = s.top();
+			s.pop();
+			t2 = s.top();
+			s.pop();
+			switch(ch){
+				case '*':s.push(t2*t1);
+						break;
+				case '/':s.push(t2/t1);
+						break;
+				case '+':s.push(t2+t1);
+						break;
+				case '-':s.push(t2-t1);
+						break;
+			}
+		}
+	}
+	return s.top();
 }

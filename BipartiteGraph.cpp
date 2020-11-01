@@ -7,10 +7,10 @@ using namespace std;
 const int maxn = 1e4;
 
 class BipartiteGraph{
-	/***
-	*** 1.vertex can be 3,4,9,10,'a'
-	*** 2.reset all_matched 
-	***/
+	/**
+	 * 1.vertex can be 3,4,9,10,'a'
+	 * 2.reset all_matched 
+	 **/
 	private:
 		int vertex_num,edge_num;
 		bool all_matched = false,right_denied = false;
@@ -31,12 +31,10 @@ class BipartiteGraph{
 		bool judge_bipartite_graph(int);
 		bool augmenting_path(int,bool*,bool*,vector<int>*,vector<int>*,int);
 		void hungarian_algorithm();
-		void hopcroft_karp();
 		
 };
 
 BipartiteGraph::BipartiteGraph(){
-	//memset(matched,false,sizeof(matched));
 	cout<<"Please input the num of vertexs:"<<endl;
 	cin>>vertex_num;
 	cout<<"Please input the num of edges:"<<endl;
@@ -59,9 +57,11 @@ BipartiteGraph::BipartiteGraph(){
 		}
 	}
 }
+
 BipartiteGraph::~BipartiteGraph(){
 	return ;
 }
+
 void BipartiteGraph::vector_delete(vector<int> &my_vector,int num){
 	for(auto iter = my_vector.begin();iter!=my_vector.end();iter++){
 		if(*iter==num){
@@ -70,12 +70,15 @@ void BipartiteGraph::vector_delete(vector<int> &my_vector,int num){
 		}
 	}
 }
+
 void BipartiteGraph::print_graph(){
 	return ;
 }
+
 void BipartiteGraph::print_bipartite_graph(){
 	return ;
 }
+
 bool BipartiteGraph::judge_bipartite_graph(int start = 0){
 	/*
 	用染色法判断是否为二分图
@@ -101,6 +104,7 @@ bool BipartiteGraph::judge_bipartite_graph(int start = 0){
 	}
 	return true;
 }
+
 bool BipartiteGraph::augmenting_path(int tmp_vertex,bool *visit,bool *marked,vector<int> *un_matched,vector<int> *matched,int flag=1){
 	if(flag==1){
 		/*
@@ -145,6 +149,7 @@ bool BipartiteGraph::augmenting_path(int tmp_vertex,bool *visit,bool *marked,vec
 		return false;
 	}
 }
+
 void BipartiteGraph::hungarian_algorithm(){
 	/*
 	匈牙利算法二分匹配
@@ -175,9 +180,7 @@ void BipartiteGraph::hungarian_algorithm(){
 		}
 	}
 }
-void BipartiteGraph::hopcroft_karp(){
-	return ;
-}
+
 int main(){
 	BipartiteGraph a = BipartiteGraph();
 	a.hungarian_algorithm();

@@ -1,7 +1,13 @@
 {
     "version": "0.2.0",
     "configurations": [
-    
+        {
+            "name": "Python: 当前文件",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal"
+        },
         {
             "name": "g++.exe build and debug active file",
             "type": "cppdbg",
@@ -11,7 +17,7 @@
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}",
             "environment": [],
-            "externalConsole": true,      //修改此项，让其弹出终端
+            "externalConsole": true, //修改此项，让其弹出终端
             "MIMode": "gdb",
             "miDebuggerPath": "D:\\mingw64\\bin\\gdb.exe",
             "setupCommands": [

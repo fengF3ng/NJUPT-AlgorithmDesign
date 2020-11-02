@@ -12,7 +12,7 @@ class QuestionBank{
 		/**
 		 * var
 		 **/
-		static const int maxn = 1e5;//length of expression
+		static const int maxn = 1e2;//length of expression
 		static const int questions = 10; // nums of questions
 		int remain,len;
 		bool negative,decimal,bracket;
@@ -21,7 +21,7 @@ class QuestionBank{
 		 **/
 		int icp(char a); // in-stack priority
 		int isp(char a);
-		void change(string,int[]); // infix expression to suffix expression
+		void change(string,char[maxn][maxn]); // infix expression to suffix expression
 	public:
 		QuestionBank();
 		~QuestionBank();
@@ -37,7 +37,7 @@ class QuestionBank{
 		 * main public method
 		 **/
 		string generate(unsigned int seed = rand(),int flag = 0); 
-		int calculate(string); // calculate suffix expression	
+		double calculate(string); // calculate suffix expression	
 }; 
 
 extern "C"{
@@ -45,6 +45,7 @@ extern "C"{
 	 * c api for py
 	 **/
 	QuestionBank a;
+	
 
 	char* py_test(char *s){
 		return s;
@@ -91,10 +92,7 @@ void test(){
 	 * debug mode!!
 	 **/
 	QuestionBank b;
-	string s = b.generate();
-	cout<<s<<endl;
-	cout<<b.calculate("1*0*8")<<endl;
-	cout<<s<<endl;
+	cout<<b.calculate("(1.2+1.3)*2.5")<<endl;
 }
 
 int main(){
@@ -142,7 +140,7 @@ int QuestionBank::isp(char a){
 	}
 }
 
-void QuestionBank::change(string infix_expression,int suffix_expression[]){
+void QuestionBank::change(string infix_expression,char suffix_expression[maxn][maxn]){
 	int i=0,j=0;
 	int ch;
 	char temp;
@@ -151,26 +149,36 @@ void QuestionBank::change(string infix_expression,int suffix_expression[]){
 	while(infix_expression[i]!='#'){
 		ch=infix_expression[i++];
 		if('0'<=ch && ch<='9'){ // operand
-			int tnum = 0;
-			while('0'<=ch && ch<='9'){
-				tnum = 10*tnum+ch-'0';
+			int k=1;
+			suffix_expression[j][0] = 'd';
+			while(('0'<=ch && ch<='9')||ch=='.'){
+				suffix_expression[j][k++] = ch;
 				ch = infix_expression[i++];
 			}
+			suffix_expression[j][k] = '\x00';
 			i--;
-			suffix_expression[j++] = tnum;
+			j++;
 		}
 		else if(ch==')')
-			for(temp=s.top(),s.pop();temp!='(';temp=s.top(),s.pop())
-				suffix_expression[j++] = temp;
+			for(temp=s.top(),s.pop();temp!='(';temp=s.top(),s.pop()){
+				suffix_expression[j][0] = 'o';
+				suffix_expression[j][1] = temp;
+				j++;
+			}
 		else{
-			for(temp=s.top(),s.pop();icp(ch)<=isp(temp);temp=s.top(),s.pop())
-				suffix_expression[j++] = temp;
+			for(temp=s.top(),s.pop();icp(ch)<=isp(temp);temp=s.top(),s.pop()){
+				suffix_expression[j][0] = 'o';
+				suffix_expression[j][1] = temp;
+				j++;
+			}
 			s.push(temp);
 			s.push((char)ch);
 		}
 	}
 	while(!s.empty()){
-		suffix_expression[j++] = s.top();
+		suffix_expression[j][0] = 'o';
+		suffix_expression[j][1] = s.top();
+		j++;
 		s.pop();	
 	}
 }
@@ -203,7 +211,13 @@ string QuestionBank::generate(unsigned int seed,int flag){
 	if(flag && bracket)res += '(';
 	if(remain<=1){
 		char tmp[10];
-		itoa(rand()%len,tmp,10);
+		if(rand()%2 && decimal){
+			itoa(rand()%len,tmp,10);
+			itoa(rand()%10,tmp+strlen(tmp)+1,10);
+			tmp[strlen(tmp)] = '.';
+		}else{
+			itoa(rand()%len,tmp,10);
+		}
 		res += tmp;
 	}else{
 		res += generate(seed*seed+time(0),rand()%2);
@@ -219,33 +233,49 @@ string QuestionBank::generate(unsigned int seed,int flag){
 	}
 	if(remain<=1){
 		char tmp[10];
-		itoa(rand()%len,tmp,10);
+		if(rand()%2 && decimal){
+			itoa(rand()%len,tmp,10);
+			itoa(rand()%10,tmp+strlen(tmp)+1,10);
+			tmp[strlen(tmp)] = '.';
+		}else{
+			itoa(rand()%len,tmp,10);
+		}
 		res += tmp;
 	}else{
-		res += generate(seed*seed*seed+time(0),rand()%2);
+		string tmp = generate(seed*seed*seed+time(0),rand()%2);
 	}
+	
 	if(flag && bracket)res += ')';
 	return res;
 }
 
-int QuestionBank::calculate(string infix_expression){
-	int suffix_expression[maxn];
+double QuestionBank::calculate(string infix_expression){
+	char suffix_expression[maxn][maxn];
 	infix_expression.append(1,'#');
 	change(infix_expression,suffix_expression);
-	stack<int>s;
+	stack<double>s;
 	int j=0;
 	while(true){
-		int ch=suffix_expression[j++];
-		if(ch=='#')break;
-		if(ch!='+' && ch!='-' && ch!='*' && ch!='/')
-			s.push(ch);
+		if(suffix_expression[j][0] == 'o' && suffix_expression[j][1]=='#')break;
+		if(suffix_expression[j][0] == 'd'){
+			double tmp = 0;
+			for(int k = 1;suffix_expression[j][k];k++){
+				if(suffix_expression[j][k]=='.'){
+					tmp += (suffix_expression[j][k+1]-'0')*0.1;
+					break;
+				}
+				else tmp = suffix_expression[j][k]-'0'+tmp*10;
+			}
+			cout<<tmp<<endl;
+			s.push(tmp);
+		}	
 		else{
-			int t1,t2;
+			double t1,t2;
 			t1 = s.top();
 			s.pop();
 			t2 = s.top();
 			s.pop();
-			switch(ch){
+			switch(suffix_expression[j][1]){
 				case '*':s.push(t2*t1);
 						break;
 				case '/':s.push(t2/t1);
@@ -256,6 +286,7 @@ int QuestionBank::calculate(string infix_expression){
 						break;
 			}
 		}
+		j++;
 	}
 	return s.top();
 }

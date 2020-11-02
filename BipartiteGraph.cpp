@@ -16,6 +16,9 @@ class BipartiteGraph{
 		bool all_matched = false,right_denied = false;
 		vector<int>edge[maxn];
 		vector<int>matched_edge[maxn];
+		void vector_delete(vector<int> &,int);
+		bool judge_bipartite_graph(int);
+		bool augmenting_path(int,bool*,bool*,vector<int>*,vector<int>*,int);
 	public:
 		BipartiteGraph();
 		~BipartiteGraph();
@@ -24,12 +27,8 @@ class BipartiteGraph{
 		void add_vertex();
 		void delete_vertex();
 		void delete_edge();*/
-		void vector_delete(vector<int> &,int);
 		void print_graph();
 		void print_bipartite_graph();
-		
-		bool judge_bipartite_graph(int);
-		bool augmenting_path(int,bool*,bool*,vector<int>*,vector<int>*,int);
 		void hungarian_algorithm();
 		
 };
@@ -183,6 +182,5 @@ void BipartiteGraph::hungarian_algorithm(){
 
 int main(){
 	BipartiteGraph a = BipartiteGraph();
-	a.hungarian_algorithm();
 	system("pause");
 } 

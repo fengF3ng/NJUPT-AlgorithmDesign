@@ -14,6 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 class Ui_MainWindow(object):
     def setupUi(self, MainWindow):
         MainWindow.setObjectName("MainWindow")
+        MainWindow.resize(900, 550)
         MainWindow.setMinimumSize(QtCore.QSize(900, 550))
         MainWindow.setMaximumSize(QtCore.QSize(900, 550))
         self.centralwidget = QtWidgets.QWidget(MainWindow)
@@ -152,7 +153,6 @@ class Ui_MainWindow(object):
         self.actionExit.setObjectName("actionExit")
         self.actionOpen = QtWidgets.QAction(MainWindow)
         self.actionOpen.setObjectName("actionOpen")
-        self.menu11.addAction(self.actionOpen)
         self.menu11.addAction(self.actionSave)
         self.menu11.addAction(self.actionExit)
         self.menubar.addAction(self.menu11.menuAction())

@@ -16,5 +16,6 @@
         "vector": "cpp",
         "memory": "cpp",
         "optional": "cpp"
-    }
+    },
+    "python.pythonPath": "C:\\Users\\HeFeng\\AppData\\Local\\Programs\\Python\\Python37\\python.exe"
 }

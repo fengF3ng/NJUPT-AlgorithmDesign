@@ -1,5 +1,6 @@
 import ctypes
 import sys
+import time
 from random import *
 
 import win32con
@@ -9,6 +10,7 @@ from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
 
 import Ui_QuestionBankUI
+
 
 QBlibc = ctypes.WinDLL("./QuestionBank.dll")
 QBlibc.py_test.restype = ctypes.c_char_p
@@ -163,10 +165,15 @@ class QBWindows(QMainWindow, Ui_QuestionBankUI.Ui_MainWindow):
             self.standard_ans.append(
                 float('%.1f' % QBlibc.py_calculate(bytes(s, encoding='utf-8'))))
         else:
-            self.standard_ans.append(
-                int(QBlibc.py_calculate(bytes(s, encoding='utf-8'))))
+            try:
+                self.standard_ans.append(
+                    int(QBlibc.py_calculate(bytes(s, encoding='utf-8'))))
+            except (OverflowError):
+                pass
+                #print(QBlibc.py_calculate(bytes(s, encoding='utf-8')))
+
         self.problems[index-1].setText(_translate("MainWindow", s))
-        self.user_problems += s + '\n' + 'Correct answer:' + \
+        self.user_problems += str(index) + '、' + s + '\n' + 'Correct answer:' + \
             str(self.standard_ans[index-1]) + '\n'
 
         wid = []
@@ -185,26 +192,33 @@ class QBWindows(QMainWindow, Ui_QuestionBankUI.Ui_MainWindow):
                 int(QBlibc.py_calculate(bytes(s, encoding='utf-8'))))
         s += '\n'
         right_ans = randint(0, 3) % 4
+        repeat = {str(ans_part[0]): 1}
         for i in range(4):
             if right_ans == i:
                 ans_part.append(i)
                 s += chr(ord('A')+i) + "." + str(ans_part[0]) + "  "
             else:
                 s += chr(ord('A')+i) + "."
-                # while true:
-                if self.bool_negative and self.bool_decimal:
-                    tmp = uniform(-self.int_len, self.int_len)
-                    s += str(float('%.1f' % tmp)) + "  "
-                elif self.bool_negative and not self.bool_decimal:
-                    s += str(randint(-self.int_len, self.int_len)) + "  "
-                elif not self.bool_negative and self.bool_decimal:
-                    tmp = uniform(0, self.int_len)
-                    s += str(float('%.1f' % tmp)) + "  "
-                elif not self.bool_negative and not self.bool_decimal:
-                    s += str(randint(0, self.int_len)) + "  "
+                while True:
+                    wrong_ans = ""
+                    if self.bool_negative and self.bool_decimal:
+                        tmp = uniform(-(self.int_len**2), self.int_len**2)
+                        wrong_ans = str(float('%.1f' % tmp))
+                    elif self.bool_negative and not self.bool_decimal:
+                        wrong_ans = str(
+                            randint(-(self.int_len**2), self.int_len**2))
+                    elif not self.bool_negative and self.bool_decimal:
+                        tmp = uniform(0, self.int_len**2)
+                        wrong_ans = str(float('%.1f' % tmp))
+                    elif not self.bool_negative and not self.bool_decimal:
+                        wrong_ans = str(randint(0, self.int_len**2))
+                    if not wrong_ans in repeat:
+                        repeat[wrong_ans] = 1
+                        s += wrong_ans + " "
+                        break
         self.standard_ans.append(ans_part)
         self.problems[index-1].setText(_translate("MainWindow", s))
-        self.user_problems += s + '\n' + 'Correct answer:' + \
+        self.user_problems += str(index) + '、' + s + '\n' + 'Correct answer:' + \
             chr(ord('A')+right_ans) + '\n'
 
         buttonGroup = QButtonGroup(self.gridLayoutWidget_2)
@@ -247,21 +261,23 @@ class QBWindows(QMainWindow, Ui_QuestionBankUI.Ui_MainWindow):
             wrong_ans = ''
             while True:
                 if self.bool_negative and self.bool_decimal:
-                    tmp = uniform(-self.int_len, self.int_len)
+                    tmp = uniform(-(self.int_len**2), self.int_len**2)
                     wrong_ans = str(float('%.1f' % tmp))
                 elif self.bool_negative and not self.bool_decimal:
-                    wrong_ans = str(randint(-self.int_len, self.int_len))
+                    wrong_ans = str(
+                        randint(-(self.int_len**2), self.int_len**2))
                 elif not self.bool_negative and self.bool_decimal:
-                    tmp = uniform(0, self.int_len)
+                    tmp = uniform(0, self.int_len**2)
                     wrong_ans = str(float('%.1f' % tmp))
                 elif not self.bool_negative and not self.bool_decimal:
-                    wrong_ans = str(randint(0, self.int_len))
-                if wrong_ans != ans_part[0]:
+                    wrong_ans = str(randint(0, self.int_len**2))
+                if wrong_ans != str(ans_part[0]):
                     break
             s += wrong_ans
         self.standard_ans.append(ans_part)
         self.problems[index-1].setText(_translate("MainWindow", s))
-        self.user_problems += s + '\n' + ('√' if right_ans else '×') + '\n'
+        self.user_problems += str(index) + '、' + s + '\n' + \
+            'Correct answer:' + ('√' if right_ans else '×') + '\n'
 
         buttonGroup = QButtonGroup(self.gridLayoutWidget_2)
         wid = []
@@ -296,20 +312,36 @@ class QBWindows(QMainWindow, Ui_QuestionBankUI.Ui_MainWindow):
                 else:
                     score += 1
             elif len(i) == 1:  # blank
+                value = i[0].text()
                 if self.bool_decimal:
-                    if float(i[0].text())-self.standard_ans[j] < 0.1:
-                        score += 1
-                    else:
+                    try:
+                        value = float(value)
+                        value = float('%.1f' % value)
+                    except:
                         self.user_analysis += 'Wrong in ' + \
                             str(j+1) + ",the corret answer is " + \
                             str(self.standard_ans[j]) + "\n"
+                    else:
+                        if abs(value-self.standard_ans[j]) < 0.1:
+                            score += 1
+                        else:
+                            self.user_analysis += 'Wrong in ' + \
+                                str(j+1) + ",the corret answer is " + \
+                                str(self.standard_ans[j]) + "\n"
                 else:
-                    if int(i[0].text()) == self.standard_ans[j]:
-                        score += 1
-                    else:
+                    try:
+                        value = int(value)
+                    except:
                         self.user_analysis += 'Wrong in ' + \
                             str(j+1) + ",the corret answer is " + \
                             str(self.standard_ans[j]) + "\n"
+                    else:
+                        if int(i[0].text()) == self.standard_ans[j]:
+                            score += 1
+                        else:
+                            self.user_analysis += 'Wrong in ' + \
+                                str(j+1) + ",the corret answer is " + \
+                                str(self.standard_ans[j]) + "\n"
             j += 1
         self.user_analysis += 'Your get ' + str(score)
         self.analysis.setText(_translate("MainWindow", self.user_analysis))
@@ -328,11 +360,11 @@ class QBWindows(QMainWindow, Ui_QuestionBankUI.Ui_MainWindow):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    QBui = QBWindows()
     try:
+        seed(time.time())
+        app = QApplication(sys.argv)
+        QBui = QBWindows()
         QBui.show()
+        sys.exit(app.exec())
     except:
         pass
-    finally:
-        sys.exit(app.exec())

@@ -27,7 +27,7 @@
   </property>
   <property name="windowIcon">
    <iconset>
-    <normaloff>./icon.png</normaloff>./icon.png</iconset>
+    <normaloff>icon.png</normaloff>icon.png</iconset>
   </property>
   <widget class="QWidget" name="centralwidget">
    <widget class="QWidget" name="verticalLayoutWidget_2">
@@ -198,7 +198,7 @@
      <rect>
       <x>230</x>
       <y>30</y>
-      <width>512</width>
+      <width>560</width>
       <height>351</height>
      </rect>
     </property>
@@ -241,7 +241,7 @@
      <item row="0" column="1">
       <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>题目                               </string>
+        <string>题目                                     </string>
        </property>
       </widget>
      </item>
@@ -343,6 +343,19 @@
     </property>
     <property name="text">
      <string>运算数范围</string>
+    </property>
+   </widget>
+   <widget class="QLabel" name="label_20">
+    <property name="geometry">
+     <rect>
+      <x>310</x>
+      <y>480</y>
+      <width>151</width>
+      <height>16</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>Desgined By Hefeng</string>
     </property>
    </widget>
   </widget>
